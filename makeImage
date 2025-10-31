@@ -1,0 +1,7 @@
+#!/bin/bash
+javac -cp .:/home/clovis/Downloads/jna-5.14.0.jar ClCompAppMain.java
+rm -f myapp.jar
+cp /home/clovis/SAFplus_java_ver4/ClCompAppMain.class .
+jar cfe myapp.jar  ClCompAppMain *
+printf '%s\n' '#!/usr/bin/java -jar' | cat - myapp.jar > temp && mv temp myapp.jar
+chmod +x myapp.jar

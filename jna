@@ -1,0 +1,40 @@
+int add(int a, int b);
+import com.sun.jna.*;
+
+public class DynamicCallExample {
+    public static void main(String[] args) {
+        NativeLibrary lib = NativeLibrary.getInstance("mylib"); // libmylib.so
+        Function addFunc = lib.getFunction("add");
+
+        int result = addFunc.invokeInt(new Object[]{3, 5});
+        System.out.println("Result = " + result);
+    }
+}
+
+void function:
+void printMsg(const char *msg);
+Function printFunc = lib.getFunction("printMsg");
+printFunc.invokeVoid(new Object[]{"Hello from Java!"});
+
+function returning long, taking a Pointer:
+long process(void* data, int len);
+Pointer data = new Memory(16);
+data.setString(0, "hello");
+Function processFunc = lib.getFunction("process");
+long result = processFunc.invokeLong(new Object[]{data, 16});
+
+Generic invocation:
+Object ret = func.invoke(Object.class, new Object[]{ arg1, arg2 });
+
+
+
+| Return type | Method                                    |
+| ----------- | ----------------------------------------- |
+| `int`       | `invokeInt()`                             |
+| `long`      | `invokeLong()`                            |
+| `float`     | `invokeFloat()`                           |
+| `double`    | `invokeDouble()`                          |
+| `void`      | `invokeVoid()`                            |
+| `Pointer`   | `invokePointer()`                         |
+| `Object`    | `invoke(Class returnType, Object[] args)` |
+
