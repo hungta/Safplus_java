@@ -5,6 +5,7 @@ import saAmf.SaAmfLibrary.*;
 //import saAmf.SaAmfLibrary.SaAmfHAStateT.*;
 import saAmf.SaAmfCallbacksT;
 import saAmf.SaAmfCallbacksT.*;
+import saAmf.SaAmfCSIDescriptorT;
 import saAis.SaAisLibrary;
 import saAis.SaAisLibrary.*;
 import clEoLib.ClEoLibrary;
@@ -58,7 +59,8 @@ public class ClCompAppMain {
   /*public static SaAisLibrary SaAisLibrary = SaAisLibrary.INSTANCE;*/
   public static clEoLib.ClEoLibrary eoLib = clEoLib.ClEoLibrary.INSTANCE;
   public static LongByReference amfHandle = new LongByReference();
-  public static saAmf.SaAmfCallbacksT callbacks = new saAmf.SaAmfCallbacksT();
+  //public static saAmf.SaAmfCallbacksT callbacks = new saAmf.SaAmfCallbacksT();
+  public static saAmf.SaAmfCallbacksT.ByReference callbacks = new saAmf.SaAmfCallbacksT.ByReference();
   public static boolean unblockNow = false;
   
   //public static saAis.SaAisLibrary.SaAisErrorT rc;
@@ -78,9 +80,11 @@ public class ClCompAppMain {
     /*
      * Take appropriate action based on state
      */
-    String msg = String.format("Component [%s] : PID [%d]. CSI Set Received\n", 
-                                Native.toString(compName.value), mypid);
-    clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, msg);
+    try {    
+    compName.read(); 
+    String msg = String.format("Component [%s] : PID [%d]. CSI Set Received\n", Native.toString(compName.value), mypid); clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, msg); 
+    logger.info(msg);
+    clCompAppAMFPrintCSI(csiDescriptor,haState);
     switch ( haState ) {
         case saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_ACTIVE:
         {
@@ -134,44 +138,52 @@ public class ClCompAppMain {
             break;
         }
     }
-
+    }catch (Throwable t) {
+        t.printStackTrace(); // don't let exceptions escape native callback
+    }
     return;
   };
-  public static saAmf.SaAmfLibrary.SaAmfCSIRemoveCallbackT csiRemoveCb = (invocation, compName, csiName, ciFlags) -> {
+  public static saAmf.SaAmfLibrary.SaAmfCSIRemoveCallbackT csiRemoveCb = (invocation, compName, csiName, csiFlags) -> {
     //clprintf (CL_LOG_SEV_INFO, "Component [%.*s] : PID [%d]. CSI Remove Received\n", 
     //          compName->length, compName->value, mypid);
 
     //clprintf (CL_LOG_SEV_INFO, "   CSI                     : %.*s\n", csiName->length, csiName->value);
     //clprintf (CL_LOG_SEV_INFO, "   CSI Flags               : 0x%d\n", csiFlags);
-
+    //saAis.SaAisLibrary.SaNameT comp = new saAis.SaAisLibrary.SaNameT(compName);
+    //if (compName != null) compName.read();
+    compName.read();
+    //csiName.read();
+    clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Component [%s] : PID [%d]. CSI Remove Received\n", Native.toString(compName.value), mypid));
     /*
      * Add application specific logic for removing the work for this CSI.
      */
-
-    saAmfLib.saAmfResponse(amfHandle.getValue(), invocation, saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK);
-
+    try {
+      logger.info("csiRemoveCb: calling saAmfResponse");
+      saAmfLib.saAmfResponse(amfHandle.getValue(), invocation, saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK);
+    }catch (Throwable t) {
+        t.printStackTrace(); // avoid letting exceptions escape native callback
+    }
     return;
   };
+  
   public static saAmf.SaAmfLibrary.SaAmfComponentTerminateCallbackT termCb = (invocation, compName) -> {
-    int rc = saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK;
-    //clprintf (CL_LOG_SEV_INFO, "Component [%.*s] : PID [%d]. Terminating\n",
-    //          compName->length, compName->value, mypid);
-
-    
-    /*
-     * Unregister with AMF and respond to AMF saying whether the
-     * termination was successful or not.
-     */
-    saAis.SaAisLibrary.SaNameT.ByReference compNameRef = new saAis.SaAisLibrary.SaNameT.ByReference();
-    System.arraycopy(compName.value, 0, compNameRef.value, 0, compName.length);
-    compNameRef.write();   
-    rc = saAmfLib.saAmfComponentUnregister(amfHandle.getValue(), compNameRef, null); 
-    if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK)
-    {
-      saAmfLib.saAmfResponse(amfHandle.getValue(), invocation, saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK);
-      //clprintf (CL_LOG_SEV_INFO, "Component [%.*s] : PID [%d]. Terminated\n",
-      //        compName->length, compName->value, mypid);
-      unblockNow = true;
+    try {
+      int rc = saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK;    
+      clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Component [%s] : PID [%d]. Terminating\n", Native.toString(compName.value), mypid));    
+      /*
+       * Unregister with AMF and respond to AMF saying whether the
+       * termination was successful or not.
+       */    
+      compName.read();
+      rc = saAmfLib.saAmfComponentUnregister(amfHandle.getValue(), compName.getPointer(), null);
+      if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK)
+      {
+        saAmfLib.saAmfResponse(amfHandle.getValue(), invocation, saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK);
+        clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Component [%s] : PID [%d]. Terminated\n", Native.toString(compName.value), mypid)); 
+        unblockNow = true;
+      }
+    }catch (Throwable t) {
+        t.printStackTrace();
     }
     return;
   };
@@ -206,11 +218,13 @@ public class ClCompAppMain {
     callbacks.saAmfComponentTerminateCallback = termCb;
     callbacks.saAmfCSISetCallback = csiSetCb;
     callbacks.saAmfCSIRemoveCallback = csiRemoveCb;
-    callbacks.saAmfProtectionGroupTrackCallback = null;
+    callbacks.saAmfProtectionGroupTrackCallback = null;    
+    callbacks.saAmfProxiedComponentInstantiateCallback = null;
+    callbacks.saAmfProxiedComponentCleanupCallback = null;
     callbacks.write(); // sync struct
-    Pointer callbacksPtr = callbacks.getPointer();
-    Pointer versionPtr = version.getPointer();
-    int rc = saAmfLib.saAmfInitialize(amfHandle, callbacksPtr, versionPtr);
+    //Pointer callbacksPtr = callbacks.getPointer();
+    //Pointer versionPtr = version.getPointer();
+    int rc = saAmfLib.saAmfInitialize(amfHandle, callbacks, version);
     /* --- Step 5: Retrieve the handle (if rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK)
         Pointer amfHandle = amfHandleRef.getValue();
         System.out.println("Got handle pointer: " + amfHandle);
@@ -220,7 +234,7 @@ public class ClCompAppMain {
     }
     FDSet readfds = new FDSet();
     readfds.FD_ZERO();
-    IntByReference dispatch_fd = new IntByReference();
+    LongByReference dispatch_fd = new LongByReference();
     rc = saAmfLib.saAmfSelectionObjectGet(amfHandle.getValue(), dispatch_fd);
     if (rc != saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
       exit(-1);
@@ -268,6 +282,100 @@ public class ClCompAppMain {
     rc = saAmfLib.saAmfFinalize(amfHandle.getValue());
     if (rc != saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
       exit(-1);
+    }
+  }
+  
+  public static String haStateToString(int haState) {
+    //String strHaState;
+    switch (haState) {
+      case saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_ACTIVE: 
+        return "Active";
+      case saAmf.SaAmfLibrary.SaAmfHaStateT. SA_AMF_HA_STANDBY:
+         return "Standby";
+      case saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_QUIESCED:
+         return "Quiesced";
+      case saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_QUIESCING:
+        return "Quiescing";
+      default:
+        return "Unknown";
+    }
+  }
+  
+  public static String csiFlagsToString(int csiFlags) {
+    if ((csiFlags & saAmf.SaAmfLibrary.SA_AMF_CSI_ADD_ONE) != 0)
+      return "Add One";
+    if ((csiFlags & saAmf.SaAmfLibrary.SA_AMF_CSI_TARGET_ONE) != 0)
+      return "Target One";
+    if ((csiFlags & saAmf.SaAmfLibrary.SA_AMF_CSI_TARGET_ALL) != 0)
+      return "Target All";
+    return "Unknown";
+  }
+  
+  public static void clCompAppAMFPrintCSI(saAmf.SaAmfCSIDescriptorT csiDescriptor,
+                          int haState) {
+    csiDescriptor.read();
+    clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
+              "CSI Flags : [%s]",
+              csiFlagsToString(csiDescriptor.csiFlags));
+
+    if (saAmf.SaAmfLibrary.SA_AMF_CSI_TARGET_ALL != csiDescriptor.csiFlags)
+    {
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("CSI Name : [%s]", 
+                  Native.toString(csiDescriptor.csiName.value)));
+    }
+
+    if (saAmf.SaAmfLibrary.SA_AMF_CSI_ADD_ONE == csiDescriptor.csiFlags)
+    {
+        int i = 0;
+        csiDescriptor.csiAttr.attr.read();
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, "Name value pairs :");
+        //Pointer ptr = MyLib.INSTANCE.createItems(3);
+        //saAmf.SaAmfCSIAttributeT first = new saAmf.SaAmfCSIAttributeT(csiDescriptor.csiAttr.attr);
+        saAmf.SaAmfCSIAttributeT[] csiAttrs = (saAmf.SaAmfCSIAttributeT[])csiDescriptor.csiAttr.attr.toArray(csiDescriptor.csiAttr.number);
+        
+        //MyStruct[] arr = (MyStruct[]) ref.toArray(5);
+        //for (i = 0; i < csiDescriptor.csiAttr.number; i++)
+        for (saAmf.SaAmfCSIAttributeT attr:csiAttrs)
+        {
+            /*clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Name : [%s]",
+                      Native.toString(csiDescriptor.csiAttr.
+                      attr[i].attrName)));
+            clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Value : [%s]",
+                      Native.toString(csiDescriptor.csiAttr.
+                      attr[i].attrValue)));*/
+            attr.read();
+            clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Name : [%s]",
+                      Native.toString(attr.attrName)));
+            clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Value : [%s]",
+                      Native.toString(attr.attrValue)));
+        }
+    }
+    
+    clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("HA state : [%s]",
+              haStateToString(haState)));
+
+    if (saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_ACTIVE == haState)
+    {
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, "Active Descriptor :");
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
+                  String.format("Transition Descriptor : [%d]",
+                  csiDescriptor.csiStateDescriptor.
+                  activeDescriptor.transitionDescriptor));
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
+                  String.format("Active Component : [%s]",
+                  Native.toString(csiDescriptor.csiStateDescriptor.
+                  activeDescriptor.activeCompName.value)));
+    }
+    else if (saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_STANDBY == haState)
+    {
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, "Standby Descriptor :");
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
+                  String.format("Standby Rank : [%d]",
+                  csiDescriptor.csiStateDescriptor.
+                  standbyDescriptor.standbyRank));
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Active Component : [%s]",
+                  Native.toString(csiDescriptor.csiStateDescriptor.
+                  standbyDescriptor.activeCompName.value)));
     }
   }
 }

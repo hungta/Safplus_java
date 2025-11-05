@@ -155,7 +155,7 @@ public interface SaAmfLibrary extends Library {
 	};*/
 	/** <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h</i> */
 	public interface SaAmfCSIRemoveCallbackT extends Callback {
-		void apply(long invocation, SaNameT compName, SaNameT csiName, Pointer csiFlags);
+		void apply(long invocation, SaNameT compName, SaNameT csiName, int csiFlags);
 	};
 	/** <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h</i> */
 	public interface SaAmfProtectionGroupTrackCallbackT extends Callback {
@@ -180,8 +180,8 @@ public interface SaAmfLibrary extends Library {
 	 * Original signature : <code>SaAisErrorT saAmfInitialize(long*, const SaAmfCallbacksT*, SaVersionT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h:159</i>
 	 */
-	//int saAmfInitialize(LongByReference amfHandle, SaAmfCallbacksT.ByReference amfCallbacks, saAis.SaAisLibrary.SaVersionT.ByReference version);
-	int saAmfInitialize(LongByReference amfHandle, Pointer amfCallbacks, Pointer version);
+	int saAmfInitialize(LongByReference amfHandle, SaAmfCallbacksT.ByReference amfCallbacks, saAis.SaAisLibrary.SaVersionT.ByReference version);
+	//int saAmfInitialize(LongByReference amfHandle, Pointer amfCallbacks, Pointer version);
 	/**
 	 * Original signature : <code>SaAisErrorT saAmfSelectionObjectGet(long, SaSelectionObjectT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h:162</i><br>
@@ -193,7 +193,7 @@ public interface SaAmfLibrary extends Library {
 	 * Original signature : <code>SaAisErrorT saAmfSelectionObjectGet(long, SaSelectionObjectT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h:162</i>
 	 */
-	int saAmfSelectionObjectGet(long amfHandle, IntByReference selectionObject);
+	int saAmfSelectionObjectGet(long amfHandle, LongByReference selectionObject);
 	/**
 	 * Original signature : <code>SaAisErrorT saAmfDispatch(long, SaDispatchFlagsT)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h:165</i><br>
@@ -241,7 +241,8 @@ public interface SaAmfLibrary extends Library {
 	 * Original signature : <code>SaAisErrorT saAmfComponentUnregister(long, const SaNameT*, const SaNameT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h:173</i>
 	 */
-	int saAmfComponentUnregister(long amfHandle, saAis.SaAisLibrary.SaNameT.ByReference compName, saAis.SaAisLibrary.SaNameT.ByReference proxyCompName);
+	//int saAmfComponentUnregister(long amfHandle, saAis.SaAisLibrary.SaNameT.ByReference compName, saAis.SaAisLibrary.SaNameT.ByReference proxyCompName);
+	int saAmfComponentUnregister(long amfHandle, Pointer compName, Pointer proxyCompName);
 	/**
 	 * Original signature : <code>SaAisErrorT saAmfComponentNameGet(long, SaNameT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h:178</i><br>

@@ -17,7 +17,10 @@ public interface LibC extends Library {
     // fd_set structure
     public static class FDSet extends Structure {
         private static final int FD_SETSIZE = 1024;
-        public int[] fds_bits = new int[(FD_SETSIZE + 31) / 32];
+        //public int[] fds_bits = new int[(FD_SETSIZE + 31) / 32];
+	
+        public long[] fds_bits = new long[FD_SETSIZE /64];
+	
 
         @Override
         protected java.util.List<String> getFieldOrder() {
@@ -29,14 +32,15 @@ public interface LibC extends Library {
             for (int i = 0; i < fds_bits.length; i++) fds_bits[i] = 0;
         }
 
-        public void FD_SET(int fd) {
-            fds_bits[fd / 32] |= (1 << (fd % 32));
+        public void FD_SET(long fd) {	    
+            int idx = (int)fd/64;
+            fds_bits[idx] |= (1 << (fd % 64));
         }
 
-        public boolean FD_ISSET(int fd) {
-            return (fds_bits[fd / 32] & (1 << (fd % 32))) != 0;
+        public boolean FD_ISSET(long fd) {
+            return (fds_bits[(int)(fd / 64)] & (1 << (fd % 64))) != 0;
         }
     }
   public final LibC INSTANCE = Native.load("c", LibC.class);
-  int select(int nfds, FDSet readfds, Pointer writefds, Pointer exceptfds, Timeval timeout);
+  int select(long nfds, FDSet readfds, Pointer writefds, Pointer exceptfds, Timeval timeout);
 }

@@ -9,3 +9,10 @@ LD_PRELOAD=SAFplus_java/libclCompCfg.so:/home/clovis/safplus/lib/libClIdl.so:/ho
 
 if loading libmw to SaAmfLibrary:
 LD_PRELOAD=`pwd`/libclCompCfg.so java -cp .:/home/clovis/Downloads/jna-5.14.0.jar ClCompAppMain
+
+=================================
+rm saAmf/*.class saAis/*.class clEoLib/*.class clUtils/*.class *.class
+javac -cp .:/home/clovis/Downloads/jna-5.14.0.jar saAmf/*.java saAis/*.java clEoLib/*.java clUtils/*.java  ClCompAppMain.java
+rm  -r saAmf saAis clEoLib clUtils *.class
+cp -r saAmf/ saAis/ clEoLib/ clUtils *.class ~/SAFplus_java_deployment/
+rm saAmf/*.java saAis/*.java clEoLib/*.java clUtils/*.java
