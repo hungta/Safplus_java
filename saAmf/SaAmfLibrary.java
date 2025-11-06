@@ -148,7 +148,7 @@ public interface SaAmfLibrary extends Library {
 	};
 	/** <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/amf/include/saAmf.h</i> */
 	public interface SaAmfCSISetCallbackT extends Callback {
-		void apply(long invocation, SaNameT compName, int haState, ByValue csiDescriptor);
+		void apply(long invocation, SaNameT compName, int haState, SaAmfCSIDescriptorT.ByValue csiDescriptor);
 	};
 	/*public interface SaAmfCSISetCallbackT extends Callback {
 		void apply(long invocation, Pointer compName, int haState, ByValue csiDescriptor);

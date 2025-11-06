@@ -12,9 +12,13 @@ import java.util.List;
  */
 public class SaAmfCSIAttributeT extends Structure {
 	/** C type : SaUint8T* */
-	public byte[] attrName = new byte[256];
+	//public byte[] attrName = new byte[256];
 	/** C type : SaUint8T* */
-	public byte[] attrValue = new byte[256];
+	//public byte[] attrValue = new byte[256];
+	//public saAis.SaAisLibrary.SaNameT attrName;
+	//public saAis.SaAisLibrary.SaNameT attrValue;
+	public Pointer attrName;
+	public Pointer attrValue;
 	public SaAmfCSIAttributeT() {
 		super();
 	}
@@ -25,7 +29,8 @@ public class SaAmfCSIAttributeT extends Structure {
 	 * @param attrName C type : SaUint8T*<br>
 	 * @param attrValue C type : SaUint8T*
 	 */
-	public SaAmfCSIAttributeT(byte[] attrName, byte[] attrValue) {
+	//public SaAmfCSIAttributeT(byte[] attrName, byte[] attrValue) {
+	public SaAmfCSIAttributeT(Pointer attrName, Pointer attrValue) {
 		super();
 		this.attrName = attrName;
 		this.attrValue = attrValue;
@@ -39,4 +44,12 @@ public class SaAmfCSIAttributeT extends Structure {
 	public static class ByValue extends SaAmfCSIAttributeT implements Structure.ByValue {
 		
 	};
+	
+	public String getName() {
+               return (attrName != null) ? attrName.getString(0) : null;
+        }
+
+        public String getValue() {
+               return (attrValue != null) ? attrValue.getString(0) : null;
+        }
 }

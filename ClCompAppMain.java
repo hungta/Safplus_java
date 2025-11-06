@@ -80,11 +80,35 @@ public class ClCompAppMain {
     /*
      * Take appropriate action based on state
      */
-    try {    
-    compName.read(); 
-    String msg = String.format("Component [%s] : PID [%d]. CSI Set Received\n", Native.toString(compName.value), mypid); clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, msg); 
-    logger.info(msg);
-    clCompAppAMFPrintCSI(csiDescriptor,haState);
+    try {
+      csiDescriptor.read();
+    /*if (compName!=null) compName.read();
+    String compStr = (compName != null)
+      ? new String(compName.value, 0, Math.min(compName.length, compName.value.length), StandardCharsets.UTF_8)
+      : "<null>";
+    String msg = String.format("Component [%s] : PID [%d]. CSI Set Received\n", compStr, mypid);*/
+    compName.read();
+    csiDescriptor.csiName.read();
+    
+    String msg = String.format("Component [%s] : PID [%d]. CSI Set Received\n", Native.toString(compName.value), mypid);             
+    clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, msg); 
+    //logger.info(msg);
+    csiDescriptor.csiStateDescriptor.setType(
+            (haState == saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_ACTIVE)
+                ? saAmf.SaAmfCSIActiveDescriptorT.class//saAmf.SaAmfCSIStateDescriptorT.SaAmfCSIActiveDescriptorT.class
+                : saAmf.SaAmfCSIStandbyDescriptorT.class
+        );        
+    /*saAmf.SaAmfCSIDescriptorT csiDescriptor = null;
+    if (csiDescriptorPtr != null) {
+        csiDescriptor = new SaAmfCSIDescriptorT(csiDescriptorPtr);
+        csiDescriptor.read();
+        clCompAppAMFPrintCSI(csiDescriptor, haState);
+    } else {
+        clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, "CSISet Callback: csiDescriptor is NULL");
+    }*/
+    
+    csiDescriptor.csiStateDescriptor.read();
+    clCompAppAMFPrintCSI(csiDescriptor, haState);
     switch ( haState ) {
         case saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_ACTIVE:
         {
@@ -158,7 +182,7 @@ public class ClCompAppMain {
      * Add application specific logic for removing the work for this CSI.
      */
     try {
-      logger.info("csiRemoveCb: calling saAmfResponse");
+      //logger.info("csiRemoveCb: calling saAmfResponse");
       saAmfLib.saAmfResponse(amfHandle.getValue(), invocation, saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK);
     }catch (Throwable t) {
         t.printStackTrace(); // avoid letting exceptions escape native callback
@@ -313,7 +337,7 @@ public class ClCompAppMain {
   
   public static void clCompAppAMFPrintCSI(saAmf.SaAmfCSIDescriptorT csiDescriptor,
                           int haState) {
-    csiDescriptor.read();
+    //csiDescriptor.read();
     clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
               "CSI Flags : [%s]",
               csiFlagsToString(csiDescriptor.csiFlags));
@@ -326,8 +350,8 @@ public class ClCompAppMain {
 
     if (saAmf.SaAmfLibrary.SA_AMF_CSI_ADD_ONE == csiDescriptor.csiFlags)
     {
-        int i = 0;
-        csiDescriptor.csiAttr.attr.read();
+        //int i = 0;
+        /*csiDescriptor.csiAttr.attr.read();
         clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, "Name value pairs :");
         //Pointer ptr = MyLib.INSTANCE.createItems(3);
         //saAmf.SaAmfCSIAttributeT first = new saAmf.SaAmfCSIAttributeT(csiDescriptor.csiAttr.attr);
@@ -336,20 +360,99 @@ public class ClCompAppMain {
         //MyStruct[] arr = (MyStruct[]) ref.toArray(5);
         //for (i = 0; i < csiDescriptor.csiAttr.number; i++)
         for (saAmf.SaAmfCSIAttributeT attr:csiAttrs)
-        {
+        {*/
             /*clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Name : [%s]",
                       Native.toString(csiDescriptor.csiAttr.
                       attr[i].attrName)));
             clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Value : [%s]",
                       Native.toString(csiDescriptor.csiAttr.
                       attr[i].attrValue)));*/
-            attr.read();
+            /*attr.read();
             clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Name : [%s]",
                       Native.toString(attr.attrName)));
             clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Value : [%s]",
                       Native.toString(attr.attrValue)));
+        }*/
+        /*saAmf.SaAmfCSIAttributeListT list = csiDescriptor.csiAttr;
+        list.read();
+
+        int n = list.number;
+        Pointer base = list.attr;
+
+        for (int i = 0; i < n; i++) {
+          saAmf.SaAmfCSIAttributeT attr = new saAmf.SaAmfCSIAttributeT(base.share(i * new saAmf.SaAmfCSIAttributeT().size()));
+          attr.read();
+          String name = Native.toString(attr.attrName);
+          String value = Native.toString(attr.attrValue);//attr.attrValue == null ? "<null>" : attr.attrValue.getString(0);
+          //System.out.println("Attr: " + name + " = " + value);
+          clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Name : [%s]",name));                      
+          clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Value : [%s]", value));           
+       }*/
+    /*saAmf.SaAmfCSIAttributeListT list = csiDescriptor.csiAttr;
+    list.read(); // CRITICAL
+
+    int count = list.number;
+    //System.out.println("Attribute count: " + count);
+
+    if (count > 0 && list.attr != null) {
+        saAmf.SaAmfCSIAttributeT attrArray =
+                new saAmf.SaAmfCSIAttributeT(list.attr);
+
+        saAmf.SaAmfCSIAttributeT[] attrs =
+                (saAmf.SaAmfCSIAttributeT[]) attrArray.toArray(count);
+
+        for (int i = 0; i < count; i++) {
+            attrs[i].read(); // ensure initialized*/
+
+            /*String name = attrs[i].attributeName.toString();
+            //String value = attrs[i].attributeValue == null ?
+                           null :
+                           attrs[i].attributeValue.getString(0);
+
+            System.out.printf("  Attribute[%d]: %s = %s%n", i, name, value);*/
+            
+        int count = csiDescriptor.csiAttr.number;
+        Pointer ptr = csiDescriptor.csiAttr.attr;
+
+        if (ptr == null || count == 0) {
+          System.out.println("  (No CSI attributes)");
+          return;
+        }
+
+        saAmf.SaAmfCSIAttributeT[] attrs =
+            (saAmf.SaAmfCSIAttributeT[]) new saAmf.SaAmfCSIAttributeT(ptr).toArray(count);
+
+        for (int i = 0; i < count; i++) {
+          attrs[i].read();
+          //System.out.printf("  Attribute[%d]: %s = %s\n",
+          //      i, attrs[i].getName(), attrs[i].getValue());
+            
+            
+            //String name = Native.toString(attrs[i].attrName);
+            //String value = Native.toString(attrs[i].attrValue);
+            clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Name :[%s]",attrs[i].getName()));                      
+            clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Value : [%s]", attrs[i].getValue()));
         }
     }
+       /*saAmf.SaAmfCSIAttributeListT attr = csiDescriptor.csiAttr;
+       attr.read();
+
+       for (int i = 0; i < attr.number; i++) {*/
+            /*SaStringT key = attr.nameValue[i].name;
+            SaStringT val = attr.nameValue[i].value;
+
+            key.read();
+            val.read();
+
+            logger.info("  Attribute: " + key.toString() + " = " + val.toString());*/
+            
+            /*String name = Native.toString(attr.attrName);
+            String value = Native.toString(attr.attrValue);
+            clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Name : [%s]",name));                      
+            clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Value : [%s]", value));  
+        }*/
+
+    
     
     clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("HA state : [%s]",
               haStateToString(haState)));
@@ -357,14 +460,22 @@ public class ClCompAppMain {
     if (saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_ACTIVE == haState)
     {
         clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, "Active Descriptor :");
-        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
+        /*clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
                   String.format("Transition Descriptor : [%d]",
                   csiDescriptor.csiStateDescriptor.
                   activeDescriptor.transitionDescriptor));
         clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
                   String.format("Active Component : [%s]",
                   Native.toString(csiDescriptor.csiStateDescriptor.
-                  activeDescriptor.activeCompName.value)));
+                  activeDescriptor.activeCompName.value)));*/
+        saAmf.SaAmfCSIActiveDescriptorT act = csiDescriptor.csiStateDescriptor.activeDescriptor;
+        act.read();
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
+                  String.format("Transition Descriptor : [%d]",
+                  act.transitionDescriptor));
+        clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO,
+                  String.format("Active Component : [%s]",
+                  Native.toString(act.activeCompName.value)));
     }
     else if (saAmf.SaAmfLibrary.SaAmfHaStateT.SA_AMF_HA_STANDBY == haState)
     {

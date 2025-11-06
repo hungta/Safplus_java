@@ -12,7 +12,9 @@ import java.util.List;
  */
 public class SaAmfCSIAttributeListT extends Structure {
 	/** C type : SaAmfCSIAttributeT* */
-	public saAmf.SaAmfCSIAttributeT.ByReference attr;
+	//public saAmf.SaAmfCSIAttributeT.ByReference attr;
+	public Pointer attr;
+	//public Pointer attr;
 	/** C type : SaUint32T */
 	public int number;
 	public SaAmfCSIAttributeListT() {
@@ -25,7 +27,7 @@ public class SaAmfCSIAttributeListT extends Structure {
 	 * @param attr C type : SaAmfCSIAttributeT*<br>
 	 * @param number C type : SaUint32T
 	 */
-	public SaAmfCSIAttributeListT(saAmf.SaAmfCSIAttributeT.ByReference attr, int number) {
+	public SaAmfCSIAttributeListT(Pointer attr, int number) {
 		super();
 		this.attr = attr;
 		this.number = number;
