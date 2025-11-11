@@ -18,11 +18,18 @@ import libc.Errno;
 import libc.Errno.*;
 import java.lang.ProcessHandle;
 
-public class ClCompAppMain {  
+public class ClCompAppMain {
+
+  private static interface CompCfgLibrary extends Library {
+    public static final String JNA_LIBRARY_NAME = "clCompCfg";
+    public static final CompCfgLibrary INSTANCE = Native.load(JNA_LIBRARY_NAME, CompCfgLibrary.class);
+  };	
+
   private static long mypid = 0;
   private static saAis.SaAisLibrary.SaNameT.ByReference appName = new saAis.SaAisLibrary.SaNameT.ByReference();  
   private static short svcId = 10;
 
+  private static CompCfgLibrary compCfgLib = CompCfgLibrary.INSTANCE;
   private static NativeLibrary mwNativeLib = clUtils.ClUtilsLibrary.MW_NATIVE_LIB;
   private static clUtils.ClUtilsLibrary utilsLib = clUtils.ClUtilsLibrary.UTILS_INSTANCE;
   private static NativeLibrary iocLib = NativeLibrary.getInstance("ClIoc");
