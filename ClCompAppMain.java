@@ -34,9 +34,8 @@ public class ClCompAppMain {
   private static clUtils.ClUtilsLibrary utilsLib = clUtils.ClUtilsLibrary.UTILS_INSTANCE;
   private static NativeLibrary iocLib = NativeLibrary.getInstance("ClIoc");
   
-  private static void clprintf(int severity, String fmtString, Object...varArgs)
-  {
-    StackTraceElement e = Thread.currentThread().getStackTrace()[1];    
+  private static void clprintf(int severity, String fmtString, Object...varArgs) {
+    StackTraceElement e = Thread.currentThread().getStackTrace()[2];
     Pointer symPtr = mwNativeLib.getGlobalVariableAddress("CL_LOG_HANDLE_APP");     
     long handleApp = symPtr.getLong(0);   
     utilsLib.clLogMsgWrite( handleApp,
@@ -137,11 +136,13 @@ public class ClCompAppMain {
       compName.read();
       csiName.read();
       clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Component [%s] : PID [%d]. CSI Remove Received\n", Native.toString(compName.value), mypid));
-    /*
-     * Add application specific logic for removing the work for this CSI.
-     */
       clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("   CSI                     : %s\n", Native.toString(csiName.value)));
       clprintf (clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("   CSI Flags               : 0x%d\n", csiFlags));
+      
+     /*
+     * Add application specific logic for removing the work for this CSI.
+     */
+      
       saAmfLib.saAmfResponse(amfHandle.getValue(), invocation, saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK);
     }catch (Throwable t) {
         t.printStackTrace(); // avoid letting exceptions escape native callback
@@ -178,8 +179,8 @@ public class ClCompAppMain {
     System.exit(status);
   }
   
-  public static void main(String argv[])
-  {
+  public static void main(String argv[]) {
+
     mypid = ProcessHandle.current().pid();
     
     saAis.SaAisLibrary.SaVersionT.ByReference version = new saAis.SaAisLibrary.SaVersionT.ByReference();
@@ -207,7 +208,12 @@ public class ClCompAppMain {
     if (rc != saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
       errorexit(rc,-1);
     }
-    readfds.FD_SET(dispatch_fd.getValue());    
+    readfds.FD_SET(dispatch_fd.getValue());
+    
+    /*
+     * Do the application specific initialization here.
+     */
+
     rc = saAmfLib.saAmfComponentNameGet(amfHandle.getValue(), appName);
     if (rc != saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
       errorexit(rc,-1);
@@ -217,6 +223,11 @@ public class ClCompAppMain {
     if (rc != saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
       errorexit(rc,-1);
     }
+    
+    /*
+     * Print out standard information for this component.
+     */
+    
     IntByReference iocPort = new IntByReference();
     eoLib.clEoMyEoIocPortGet(iocPort);   
     clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Component [%s] : PID [%d]. Initializing\n", Native.toString(appName.value), mypid));
@@ -224,6 +235,11 @@ public class ClCompAppMain {
     int myIocAddr = iocLocalAddrGetFunc.invokeInt(new Object[]{});  
     clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("   IOC Address             : 0x%x\n", myIocAddr));
     clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("   IOC Port                : 0x%x\n",iocPort.getValue()));    
+    
+    /*
+     * Block on AMF dispatch file descriptor for callbacks
+     */
+    
     do {
         int err = libc.LibC.INSTANCE.select(dispatch_fd.getValue()+1, readfds, null, null, null);
         if (err < 0) {            
@@ -234,6 +250,10 @@ public class ClCompAppMain {
         }       
         saAmfLib.saAmfDispatch(amfHandle.getValue(), saAis.SaAisLibrary.SaDispatchFlagsT.SA_DISPATCH_ALL);        
     }while(!unblockNow); 
+    
+    /*
+     * Do the application specific finalization here.
+     */
     
     rc = saAmfLib.saAmfFinalize(amfHandle.getValue());
     if (rc != saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
@@ -265,6 +285,16 @@ public class ClCompAppMain {
       return "Target All";
     return "Unknown";
   }
+  
+  /******************************************************************************
+  * Utility functions 
+  *****************************************************************************/
+
+  /*
+   * clCompAppAMFPrintCSI
+   * --------------------
+   * Print information received in a CSI set request.
+   */
   
   private static void clCompAppAMFPrintCSI(saAmf.SaAmfCSIDescriptorT csiDescriptor,
                           int haState) {    
@@ -316,4 +346,9 @@ public class ClCompAppMain {
                   standbyDescriptor.activeCompName.value)));
     }
   }
+  
+  /*
+  * Insert any other utility functions here.
+  */
+ 
 }
