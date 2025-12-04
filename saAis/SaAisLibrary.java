@@ -99,6 +99,7 @@ public interface SaAisLibrary {//extends Library {
 		public static final int SA_AIS_ERR_NO_SECTIONS = 27;
 	};
 	/** <i>native declaration : saAis.h</i> */
+  public static final long SA_TIME_END = (long)0x7FFFFFFFFFFFFFFFL;	
 	public static final long SA_TIME_BEGIN = (long)0x0L;
 	/** <i>native declaration : saAis.h</i> */
 	public static final long SA_TIME_UNKNOWN = (long)0x8000000000000000L;
@@ -143,7 +144,7 @@ public interface SaAisLibrary {//extends Library {
 	public SaNameT(short length, byte value[]) {
 		super();
 		this.length = length;
-		if ((value.length != this.value.length)) 
+		if ((value.length != this.length) || (this.length > this.value.length)) 
 			throw new IllegalArgumentException("Wrong array size !");
 		this.value = value;
 	}
