@@ -65,7 +65,7 @@ public class ClCompAppMain {
   private static saAmf.SaAmfCallbacksT.ByReference callbacks = new saAmf.SaAmfCallbacksT.ByReference();
   private static boolean unblockNow = false; 
   
-  private static long ckptHandle, ckptLibHandle;
+  private static long ckptHandle = 0, ckptLibHandle = 0;
   
   private static saAmf.SaAmfLibrary.SaAmfCSISetCallbackT csiSetCb = (invocation, compName, haState, csiDescriptor) -> {    
     /*
@@ -93,31 +93,17 @@ public class ClCompAppMain {
              * for the CSI.
              */        	
            saAmfLib.saAmfResponse(amfHandle.getValue(), invocation, saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK);
-            
-           int rc = saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK;
            String secId = "sec11";
-		       byte[] bytes = Native.toByteArray(secId); // automatically adds null terminator
-           Pointer pSecId = new Memory(bytes.length);
-           pSecId.write(0, bytes, 0, bytes.length);
-		       saCkpt.SaCkptSectionIdT sectionId = new saCkpt.SaCkptSectionIdT((short)bytes.length, pSecId);
-		       sectionId.write();		       
-           saCkpt.SaCkptIOVectorElementT readVector = new saCkpt.SaCkptIOVectorElementT();           
-		       byte[] data = new byte[256];
-           Pointer pData = new Memory(data.length);          
-           readVector.sectionId = sectionId;           
-           readVector.dataBuffer = pData;
-           readVector.dataSize = data.length;
-           readVector.dataOffset = 0;
-           readVector.readSize = data.length;
-           readVector.write();
-           clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Reading data from section [%s] of checkpoint [0x%x]", secId, ckptHandle));    
-           IntByReference erroneousVectorIndex = new IntByReference();
-           rc = saCkptLib.saCkptCheckpointRead(ckptHandle, readVector, 1, erroneousVectorIndex);
+           clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Reading data from section [%s] of checkpoint [0x%x]", secId, ckptHandle));
+           byte[] data = new byte[256];           
+           long[] readSize = new long[1];
+           int rc = ckptRead(data, readSize, secId);
+           String readStr = new String(data, StandardCharsets.UTF_8);
            if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
-              clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Data from section [%s] of checkpoint [0x%x]: %s", secId, ckptHandle, pData.getString(0)));
+              clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Data from section [%s] of checkpoint [0x%x], data length [%d]: %s", secId, ckptHandle, readSize[0], readStr));
            }
            else {
-              clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Reading data from section [%s] of checkpoint [0x%x] failed rc [0x%x]. Err_idx [%d]", secId, ckptHandle, rc, erroneousVectorIndex.getValue()));
+              clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Reading data from section [%s] of checkpoint [0x%x] failed rc [0x%x]", secId, ckptHandle, rc));
            }
            
            break;
@@ -218,6 +204,124 @@ public class ClCompAppMain {
     System.exit(status);
   }
   
+  private static int ckptLibInit() {
+    saAis.SaAisLibrary.SaVersionT ver = new saAis.SaAisLibrary.SaVersionT();
+    ver.releaseCode = 'B';
+    ver.majorVersion = 01;
+    ver.minorVersion = 01;
+    ver.write();
+    ///LongBuffer buf = ByteBuffer.allocateDirect(8).asLongBuffer();
+    LongByReference buf = new LongByReference();
+    int rc = saCkptLib.saCkptInitialize(buf, null, ver.getPointer());
+    if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
+       ckptLibHandle = buf.getValue();
+    }
+    return rc;
+  }
+  
+  private static int ckptOpen(String name) {
+    saCkpt.SaCkptCheckpointCreationAttributesT ckptCreateAttr = new saCkpt.SaCkptCheckpointCreationAttributesT();
+    ckptCreateAttr.creationFlags = saCkpt.SaCkptLibrary.SA_CKPT_WR_ALL_REPLICAS;
+    ckptCreateAttr.checkpointSize = 1024;
+    ckptCreateAttr.retentionDuration= 60000000000L;
+    ckptCreateAttr.maxSections= 2;
+    ckptCreateAttr.maxSectionSize = 700;
+    ckptCreateAttr.maxSectionIdSize = 50;
+    ckptCreateAttr.write();		   
+    int ckptOpenFlags = saCkpt.SaCkptLibrary.SA_CKPT_CHECKPOINT_CREATE|saCkpt.SaCkptLibrary.SA_CKPT_CHECKPOINT_READ|saCkpt.SaCkptLibrary.SA_CKPT_CHECKPOINT_WRITE;		
+    byte[] toBytes = name.getBytes(StandardCharsets.UTF_8);
+    saAis.SaAisLibrary.SaNameT ckptName = new saAis.SaAisLibrary.SaNameT((short)toBytes.length, toBytes);
+    ckptName.write();
+    //LongBuffer checkpointHandleBuf = ByteBuffer.allocateDirect(8).asLongBuffer();
+    LongByReference hdl = new LongByReference();
+    clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Opening checkpoint [%s]", name));
+    int rc = saCkptLib.saCkptCheckpointOpen(ckptLibHandle, ckptName.getPointer(), ckptCreateAttr, ckptOpenFlags, 0, hdl);
+    if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
+      ckptHandle = hdl.getValue();
+    }
+    return rc;
+  }
+  
+  private static int ckptSectionCreate(String secId) {
+    saCkpt.SaCkptSectionCreationAttributesT sectionCreationAttributes = new saCkpt.SaCkptSectionCreationAttributesT();
+    byte[] bytes = Native.toByteArray(secId); // automatically adds null terminator
+    Pointer p = new Memory(bytes.length);
+    p.write(0, bytes, 0, bytes.length);
+    saCkpt.SaCkptSectionIdT sectionId = new saCkpt.SaCkptSectionIdT((short)bytes.length, p);
+    sectionId.write();
+    sectionCreationAttributes.sectionId = sectionId.getPointer(); 
+    sectionCreationAttributes.expirationTime = saAis.SaAisLibrary.SA_TIME_END;
+    sectionCreationAttributes.write();
+    clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Creating section [%s] of checkpoint [0x%x]", secId, ckptHandle));
+    String strInitData = "Default data in the section";
+    ByteBuffer initialData = ByteBuffer.allocate(strInitData.length());
+    initialData.put(strInitData.getBytes(StandardCharsets.UTF_8));		     
+    int rc = saCkptLib.saCkptSectionCreate(ckptHandle, sectionCreationAttributes, initialData, 28);
+    return rc;
+  }
+  
+  private static int ckptWrite(String dataToWrite, String secId) {
+    byte[] bytes = Native.toByteArray(secId); // automatically adds null terminator
+    Pointer p = new Memory(bytes.length);
+    p.write(0, bytes, 0, bytes.length);
+    saCkpt.SaCkptSectionIdT sectionId = new saCkpt.SaCkptSectionIdT((short)bytes.length, p);
+    sectionId.write();
+    saCkpt.SaCkptIOVectorElementT writeVector = new saCkpt.SaCkptIOVectorElementT();
+    byte[] data = Native.toByteArray(dataToWrite); // automatically adds null terminator
+    Pointer pData = new Memory(data.length);
+    pData.write(0, data, 0, data.length);
+    writeVector.sectionId = sectionId;           
+    writeVector.dataBuffer = pData;
+    writeVector.dataSize = data.length;
+    writeVector.dataOffset = 0;
+    writeVector.readSize = 0;
+    writeVector.write();
+    clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Writing data [%s] to section [%s] of checkpoint [0x%x]", pData.getString(0), secId, ckptHandle));             
+    IntByReference erroneousVectorIndex = new IntByReference();
+    int rc = saCkptLib.saCkptCheckpointWrite(ckptHandle, writeVector, 1, erroneousVectorIndex);
+    return rc;
+  }
+  
+  private static int ckptSectionOverwite(String secId, String dataToWrite) {
+    byte[] bytes = Native.toByteArray(secId); // automatically adds null terminator
+    Pointer p = new Memory(bytes.length);
+    p.write(0, bytes, 0, bytes.length);
+    saCkpt.SaCkptSectionIdT sectionId = new saCkpt.SaCkptSectionIdT((short)bytes.length, p);
+    sectionId.write();
+		
+    byte[] bbytes = Native.toByteArray(dataToWrite); // automatically adds null terminator
+    Pointer pp = new Memory(bbytes.length);
+    pp.write(0, bbytes, 0, bbytes.length);
+    
+    int rc = saCkptLib.saCkptSectionOverwrite(ckptHandle, sectionId, pp, bbytes.length);
+    return rc;
+  }
+  
+  private static int ckptRead(byte[] readData, /*Pointer outData,*/ long[] readSize, String secId) {    
+    byte[] bytes = Native.toByteArray(secId); // automatically adds null terminator
+    Pointer pSecId = new Memory(bytes.length);
+    pSecId.write(0, bytes, 0, bytes.length);
+    saCkpt.SaCkptSectionIdT sectionId = new saCkpt.SaCkptSectionIdT((short)bytes.length, pSecId);
+    sectionId.write();		       
+    saCkpt.SaCkptIOVectorElementT readVector = new saCkpt.SaCkptIOVectorElementT();           
+    Pointer pData = new Memory(readData.length);          
+    readVector.sectionId = sectionId;           
+    readVector.dataBuffer = pData;
+    readVector.dataSize = readData.length;
+    readVector.dataOffset = 0;
+    //readVector.readSize = readData.length;
+    readVector.write();    
+    IntByReference erroneousVectorIndex = new IntByReference();
+    int rc = saCkptLib.saCkptCheckpointRead(ckptHandle, readVector, 1, erroneousVectorIndex);
+    //outData = pData;
+    if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
+      byte[] bbytes = pData.getByteArray(0,(int)readVector.readSize);
+      System.arraycopy(bbytes, 0, readData, 0, (int)readVector.readSize);
+    }
+    readSize[0] = readVector.readSize;
+    return rc;
+  }
+  
   public static void main(String argv[])
   {
     mypid = ProcessHandle.current().pid();
@@ -252,88 +356,37 @@ public class ClCompAppMain {
     /*
      * Do the application specific initialization here.
      */
-    //Begin creating checkpoint and write data
-    saAis.SaAisLibrary.SaVersionT ver = new saAis.SaAisLibrary.SaVersionT();
-    ver.releaseCode = 'B';
-    ver.majorVersion = 01;
-    ver.minorVersion = 01;
-    ver.write();
-    ///LongBuffer buf = ByteBuffer.allocateDirect(8).asLongBuffer();
-    LongByReference buf = new LongByReference();
-    rc = saCkptLib.saCkptInitialize(buf, null, ver.getPointer());
-    if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
-       ckptLibHandle = buf.getValue();
-       saCkpt.SaCkptCheckpointCreationAttributesT ckptCreateAttr = new saCkpt.SaCkptCheckpointCreationAttributesT();
-       ckptCreateAttr.creationFlags = saCkpt.SaCkptLibrary.SA_CKPT_WR_ALL_REPLICAS;
-       //ckptCreateAttr.creationFlags|= saCkpt.SaCkptLibrary.SA_CKPT_CHECKPOINT_COLLOCATED;
-		   ckptCreateAttr.checkpointSize = 1024;
-		   ckptCreateAttr.retentionDuration= 60000000000L;
-		   ckptCreateAttr.maxSections= 2;
-		   ckptCreateAttr.maxSectionSize = 700;
-		   ckptCreateAttr.maxSectionIdSize = 50;
-		   ckptCreateAttr.write();		   
-		   int ckptOpenFlags = saCkpt.SaCkptLibrary.SA_CKPT_CHECKPOINT_CREATE|saCkpt.SaCkptLibrary.SA_CKPT_CHECKPOINT_READ|saCkpt.SaCkptLibrary.SA_CKPT_CHECKPOINT_WRITE;
-		   String name = "ckpt_test_001";
-		   byte[] toBytes = name.getBytes(StandardCharsets.UTF_8);
-		   saAis.SaAisLibrary.SaNameT ckptName = new saAis.SaAisLibrary.SaNameT((short)toBytes.length, toBytes);
-		   ckptName.write();
-		   //LongBuffer checkpointHandleBuf = ByteBuffer.allocateDirect(8).asLongBuffer();
-		   LongByReference hdl = new LongByReference();
-		   clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Opening checkpoint [%s]", name));
-		   rc = saCkptLib.saCkptCheckpointOpen(ckptLibHandle, ckptName.getPointer(), ckptCreateAttr, ckptOpenFlags, 0, hdl);
-		   if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
-		     ckptHandle = hdl.getValue();
-		     // creating sections
-		     saCkpt.SaCkptSectionCreationAttributesT sectionCreationAttributes = new saCkpt.SaCkptSectionCreationAttributesT();
-		     String secId = "sec11";
-		     byte[] bytes = Native.toByteArray(secId); // automatically adds null terminator
-         Pointer p = new Memory(bytes.length);
-         p.write(0, bytes, 0, bytes.length);
-		     saCkpt.SaCkptSectionIdT sectionId = new saCkpt.SaCkptSectionIdT((short)bytes.length, p);
-		     sectionId.write();
-		     sectionCreationAttributes.sectionId = sectionId.getPointer(); 
-		     sectionCreationAttributes.expirationTime = saAis.SaAisLibrary.SA_TIME_END;
-		     sectionCreationAttributes.write();
-		     clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Creating section [%s] of checkpoint [%s]", secId, name));
-		     String strInitData = "Default data in the section";
-		     ByteBuffer initialData = ByteBuffer.allocate(strInitData.length());
-		     initialData.put(strInitData.getBytes(StandardCharsets.UTF_8));		     
-		     rc = saCkptLib.saCkptSectionCreate(ckptHandle, sectionCreationAttributes, initialData, 28);
-		     if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
-           //write something to this checkpoint
-           saCkpt.SaCkptIOVectorElementT writeVector = new saCkpt.SaCkptIOVectorElementT();
-           String dataToWrite = "hello! this is data to write to checkpooint";
-		       byte[] data = Native.toByteArray(dataToWrite); // automatically adds null terminator
-           Pointer pData = new Memory(data.length);
-           pData.write(0, data, 0, data.length);
-           writeVector.sectionId = sectionId;           
-           writeVector.dataBuffer = pData;
-           writeVector.dataSize = data.length;
-           writeVector.dataOffset = 0;
-           writeVector.readSize = 0;
-           writeVector.write();
-           clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Writing data [%s] to section [%s] of checkpoint [%s]", pData.getString(0), secId, name));             
-           IntByReference erroneousVectorIndex = new IntByReference();
-           rc = saCkptLib.saCkptCheckpointWrite(ckptHandle, writeVector, 1, erroneousVectorIndex);
+     //Begin creating checkpoint and writting data
+     rc = ckptLibInit();
+     if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
+       String name = "ckpt_test_001";
+       rc = ckptOpen(name);
+       if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
+         String secId = "sec11";
+         rc = ckptSectionCreate(secId);
+         if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
+           //String dataToWrite = "openclovis; safplus; checkpoint;";
+           String dataToWrite = "openclovis; safplus; checkpoint; secOverwrite";
+           //rc = ckptWrite(dataToWrite, secId);
+           rc = ckptSectionOverwite(secId, dataToWrite);
            if (rc == saAis.SaAisLibrary.SaAisErrorT.SA_AIS_OK) {
-             clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Wrote data [%s] to section [%s] of checkpoint [%s] successfully", pData.getString(0), secId, name));
+             clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_INFO, String.format("Wrote data [%s] to section [%s] of checkpoint [%s] successfully", dataToWrite, secId, name));
            }
            else {
-             clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Wrote data [%s] to section [%s] of checkpoint [%s] failure", pData.getString(0), secId, name));
+             clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Wrote data [%s] to section [%s] of checkpoint [%s] failure", dataToWrite, secId, name));
            }
          }
          else {
            clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Creating section [%s] of checkpoint [%s] failed with rc [0x%x]", secId, name, rc));
          }
-         
-		   }
-		   else {
-		     clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Ckpt open error [0x%x]", rc));
-		   }
-    }
-    else {
-      clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Ckpt lib initialized error [0x%x]", rc));       
-    }    
+       }
+       else {
+         clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Ckpt open error [0x%x]", rc));
+       } 
+     }
+     else {
+       clprintf(clUtils.ClUtilsLibrary.ClLogSeverityT.CL_LOG_SEV_ERROR, String.format("Ckpt lib initialized error [0x%x]", rc));       
+     }    
     //End creating checkpoint and write data
     
     rc = saAmfLib.saAmfComponentNameGet(amfHandle.getValue(), appName);
