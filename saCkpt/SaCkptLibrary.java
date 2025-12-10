@@ -19,7 +19,7 @@ import java.nio.LongBuffer;
 public interface SaCkptLibrary extends Library {
 	public static final String JNA_LIBRARY_NAME = "ClCkpt";
 	public static final NativeLibrary JNA_NATIVE_LIB = NativeLibrary.getInstance(SaCkptLibrary.JNA_LIBRARY_NAME);
-	public static final SaCkptLibrary INSTANCE = (SaCkptLibrary)Native.loadLibrary(SaCkptLibrary.JNA_LIBRARY_NAME, SaCkptLibrary.class);
+	public static final SaCkptLibrary INSTANCE = (SaCkptLibrary)Native.load(SaCkptLibrary.JNA_LIBRARY_NAME, SaCkptLibrary.class);
 	/**
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h</i><br>
 	 * enum values
@@ -82,15 +82,15 @@ public interface SaCkptLibrary extends Library {
 	/**
 	 * Original signature : <code>SaAisErrorT saCkptSelectionObjectGet(SaCkptHandleT, SaSelectionObjectT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h:131</i><br>
-	 * @deprecated use the safer methods {@link #saCkptSelectionObjectGet(long, java.nio.LongBuffer)} and {@link #saCkptSelectionObjectGet(long, com.sun.jna.ptr.LongByReference)} instead
+	 * use the safer methods {@link #saCkptSelectionObjectGet(long, java.nio.LongBuffer)} and {@link #saCkptSelectionObjectGet(long, com.sun.jna.ptr.LongByReference)} instead
 	 */
-	@Deprecated 
+	
 	int saCkptSelectionObjectGet(long ckptHandle, LongByReference selectionObject);
 	/**
 	 * Original signature : <code>SaAisErrorT saCkptSelectionObjectGet(SaCkptHandleT, SaSelectionObjectT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h:131</i>
 	 */
-	int saCkptSelectionObjectGet(long ckptHandle, LongBuffer selectionObject);
+	//int saCkptSelectionObjectGet(long ckptHandle, LongBuffer selectionObject);
 	/**
 	 * Original signature : <code>SaAisErrorT saCkptDispatch(SaCkptHandleT, SaDispatchFlagsT)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h:134</i>
@@ -206,16 +206,14 @@ public interface SaCkptLibrary extends Library {
 	int saCkptSectionOverwrite(long checkpointHandle, SaCkptSectionIdT sectionId, Pointer dataBuffer, long dataSize);
 	/**
 	 * Original signature : <code>SaAisErrorT saCkptCheckpointRead(SaCkptCheckpointHandleT, SaCkptIOVectorElementT*, SaUint32T, SaUint32T*)</code><br>
-	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h:197</i><br>
-	 * @deprecated use the safer methods {@link #saCkptCheckpointRead(long, clckpt.SaCkptIOVectorElementT, int, java.nio.IntBuffer)} and {@link #saCkptCheckpointRead(long, clckpt.SaCkptIOVectorElementT, int, com.sun.jna.ptr.IntByReference)} instead
-	 */
-	@Deprecated 
+	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h:197</i><br>	 
+	 */	 
 	int saCkptCheckpointRead(long checkpointHandle, SaCkptIOVectorElementT ioVector, int numberOfElements, IntByReference erroneousVectorIndex);
 	/**
 	 * Original signature : <code>SaAisErrorT saCkptCheckpointRead(SaCkptCheckpointHandleT, SaCkptIOVectorElementT*, SaUint32T, SaUint32T*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h:197</i>
 	 */
-	int saCkptCheckpointRead(long checkpointHandle, SaCkptIOVectorElementT ioVector, int numberOfElements, IntBuffer erroneousVectorIndex);
+	//int saCkptCheckpointRead(long checkpointHandle, SaCkptIOVectorElementT ioVector, int numberOfElements, IntBuffer erroneousVectorIndex);
 	/**
 	 * Original signature : <code>SaAisErrorT saCkptCheckpointSynchronize(SaCkptCheckpointHandleT, SaTimeT)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/ckpt/include/saCkpt.h:202</i>
