@@ -26,7 +26,7 @@ public class SaMsgMessageT extends Structure {
 		super();
 	}
 	protected List<String> getFieldOrder() {
-		return Arrays.asList("type", "size", "senderName", "data", "priority");
+		return Arrays.asList("type", "version", "size", "senderName", "data", "priority");
 	}
 	/**
 	 * @param type C type : SaUint32T<br>
@@ -35,9 +35,10 @@ public class SaMsgMessageT extends Structure {
 	 * @param data C type : void*<br>
 	 * @param priority C type : SaUint8T
 	 */
-	public SaMsgMessageT(int type, long size, Pointer senderName, Pointer data, byte priority) {
+	public SaMsgMessageT(int type, saAis.SaAisLibrary.SaVersionT version, long size, Pointer senderName, Pointer data, byte priority) {
 		super();
 		this.type = type;
+		this.version = version;
 		this.size = size;
 		this.senderName = senderName;
 		this.data = data;

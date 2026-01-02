@@ -114,7 +114,7 @@ public interface SaMsgClientLibrary extends Library {
 	 * deprecated use the safer methods {@link #saMsgQueueOpen(long, com.sun.jna.Pointer, clMsgClient.SaMsgQueueCreationAttributesT, int, long, java.nio.LongBuffer)} and {@link #saMsgQueueOpen(long, com.sun.jna.Pointer, clMsgClient.SaMsgQueueCreationAttributesT, int, long, com.sun.jna.ptr.LongByReference)} instead
 	 */
 	//@Deprecated 
-	int saMsgQueueOpen(long msgHandle, Pointer queueName, SaMsgQueueCreationAttributesT creationAttributes, int openFlags, long timeout, LongByReference queueHandle);
+	int saMsgQueueOpen(long msgHandle, saAis.SaAisLibrary.SaNameT queueName, SaMsgQueueCreationAttributesT creationAttributes, int openFlags, long timeout, LongByReference queueHandle);
 	/**
 	 * Original signature : <code>SaAisErrorT saMsgQueueOpen(SaMsgHandleT, const SaNameT*, const SaMsgQueueCreationAttributesT*, SaMsgQueueOpenFlagsT, SaTimeT, SaMsgQueueHandleT*)</code><br>
 	 * <i>native declaration : /home/clovis/opt/sdk-6.1/src/SAFplus/components/msg/include/saMsg.h:170</i>
