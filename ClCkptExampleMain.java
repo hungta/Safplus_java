@@ -26,7 +26,7 @@ import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import clCkptApi.ClCkptLibrary;
 
-public class ClCompAppMain {
+public class ClCkptExampleMain {
 
   private static interface CompCfgLibrary extends Library {
     public static final String JNA_LIBRARY_NAME = "clCompCfg";
