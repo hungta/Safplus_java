@@ -1,6 +1,0 @@
-jar xf ~/Downloads/jna-5.14.0.jar
-jar cfe clcompappmain.jar  ClCompAppMain *
-
-Run:
-
-LD_PRELOAD=/home/clovis/SAFplus_java/libclCompCfg.so:/home/clovis/safplus/lib/libClIdl.so:/home/clovis/safplus/lib/libClIoc.so:/home/clovis/safplus/lib/libClTimer.so:/home/clovis/safplus/lib/libClOsal.so:/home/clovis/safplus/lib/libClGroundClient.so:/home/clovis/safplus/lib/libClLogClient.so:/home/clovis/safplus/lib/libClNameClient.so:/home/clovis/safplus/lib/libClCorClient.so:/home/clovis/safplus/lib/libClRmd.so:/home/clovis/safplus/lib/libClAmfClient.so:/home/clovis/safplus/lib/libClUtils.so:/home/clovis/safplus/lib/libClEo.so LD_LIBRARY_PATH=/home/clovis/safplus/lib:$LD_LIBRARY_PATH java -jar clcompappmain.jar

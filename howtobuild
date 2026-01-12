@@ -1,18 +1,4 @@
-1. Build: javac -cp .:/home/clovis/Downloads/jna-5.14.0.jar saAmf/*.java saAis/*.java clEoLib/*.java *.java
-2. Run:
-LD_PRELOAD=`pwd`/libclCompCfg.so:/home/clovis/safplus/lib/libClIdl.so:/home/clovis/safplus/lib/libClIoc.so:/home/clovis/safplus/lib/libClTimer.so:/home/clovis/safplus/lib/libClOsal.so:/home/clovis/safplus/lib/libClGroundClient.so:/home/clovis/safplus/lib/libClLogClient.so:/home/clovis/safplus/lib/libClNameClient.so:/home/clovis/safplus/lib/libClCorClient.so:/home/clovis/safplus/lib/libClRmd.so:/home/clovis/safplus/lib/libClAmfClient.so:/home/clovis/safplus/lib/libClUtils.so:/home/clovis/safplus/lib/libClEo.so LD_LIBRARY_PATH=/home/clovis/safplus/lib:$LD_LIBRARY_PATH java -cp .:/home/clovis/safplus/lib:/home/clovis/Downloads/jna-5.14.0.jar ClCompAppMain
-
-or from another dir:
-
-LD_PRELOAD=SAFplus_java/libclCompCfg.so:/home/clovis/safplus/lib/libClIdl.so:/home/clovis/safplus/lib/libClIoc.so:/home/clovis/safplus/lib/libClTimer.so:/home/clovis/safplus/lib/libClOsal.so:/home/clovis/safplus/lib/libClGroundClient.so:/home/clovis/safplus/lib/libClLogClient.so:/home/clovis/safplus/lib/libClNameClient.so:/home/clovis/safplus/lib/libClCorClient.so:/home/clovis/safplus/lib/libClRmd.so:/home/clovis/safplus/lib/libClAmfClient.so:/home/clovis/safplus/lib/libClUtils.so:/home/clovis/safplus/lib/libClEo.so LD_LIBRARY_PATH=/home/clovis/safplus/lib:$LD_LIBRARY_PATH java -cp /home/clovis/SAFplus_java:/home/clovis/Downloads/jna-5.14.0.jar ClCompAppMain
-
-
-if loading libmw to SaAmfLibrary:
-LD_PRELOAD=`pwd`/libclCompCfg.so java -cp .:/home/clovis/Downloads/jna-5.14.0.jar ClCompAppMain
 
 =================================
-rm saAmf/*.class saAis/*.class clEoLib/*.class clUtils/*.class *.class
 javac -cp .:/home/clovis/Downloads/jna-5.14.0.jar saAmf/*.java saAis/*.java clEoLib/*.java clUtils/*.java  ClCompAppMain.java
-rm  -r saAmf saAis clEoLib clUtils *.class
-cp -r saAmf/ saAis/ clEoLib/ clUtils *.class ~/SAFplus_java_deployment/
-rm saAmf/*.java saAis/*.java clEoLib/*.java clUtils/*.java
+cp -r libc saAmf/ saAis/ clEoLib/ clUtils saCkpt clCkptApi saMsg saEvt  *.class ~/SAFplus_java_deployment/
