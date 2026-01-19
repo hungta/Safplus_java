@@ -1,4 +1,4 @@
-package clUtils;
+package clLogApi;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import java.util.Arrays;
@@ -57,19 +57,16 @@ public class ClLogStreamAttributesT extends Structure {
 	 * C type : ClTimeT
 	 */
 	public long flushInterval;
-	/**
-	 * Conversion Error : struct ClWaterMark {<br>
-	 * 	unsigned long long lowLimit;<br>
-	 * 	ClUint64T highLimit;<br>
-	 * }
-	 */
+	
+	public ClWaterMarkT waterMark;
+	
 	/** C type : ClBoolT */
 	public short syslog;
 	public ClLogStreamAttributesT() {
 		super();
 	}
 	protected List<String> getFieldOrder() {
-		return Arrays.asList("fileName", "fileLocation", "fileUnitSize", "recordSize", "haProperty", "fileFullAction", "maxFilesRotated", "flushFreq", "flushInterval", "syslog");
+		return Arrays.asList("fileName", "fileLocation", "fileUnitSize", "recordSize", "haProperty", "fileFullAction", "maxFilesRotated", "flushFreq", "flushInterval", "waterMark", "syslog");
 	}
 	public ClLogStreamAttributesT(Pointer peer) {
 		super(peer);
