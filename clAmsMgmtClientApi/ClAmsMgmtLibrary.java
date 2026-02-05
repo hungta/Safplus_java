@@ -1242,12 +1242,17 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtEntityLockAssignment(ClAmsMgmtHandleT, const ClAmsEntityT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:245</i>
 	 */
-	int clAmsMgmtEntityLockAssignment(long amsHandle, ClAmsEntityConfigT entity);
+	//int clAmsMgmtEntityLockAssignment(long amsHandle, ClAmsEntityConfigT entity);
+	//int clAmsMgmtEntityLockAssignment(long amsHandle, Pointer entity);
+	default int clAmsMgmtEntityLockAssignment(long amsHandle, ClAmsEntityConfigT entity) {
+	  return clAmsMgmtEntityLockAssignmentExtended(amsHandle, entity, (short) 1); 
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtEntityLockAssignmentExtended(ClAmsMgmtHandleT, const ClAmsEntityT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:249</i>
 	 */
 	int clAmsMgmtEntityLockAssignmentExtended(long amsHandle, ClAmsEntityConfigT entity, short retry);
+	//int clAmsMgmtEntityLockAssignmentExtended(long amsHandle, Pointer entity, short retry);
 	/**
 	 * ***********************************<br>
 	 *  \brief Changes the administrative state of an AMS entity to lock instantiated <br>
@@ -1322,7 +1327,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtEntityLockInstantiation(ClAmsMgmtHandleT, const ClAmsEntityT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:343</i>
 	 */
-	int clAmsMgmtEntityLockInstantiation(long amsHandle, ClAmsEntityConfigT entity);
+	default int clAmsMgmtEntityLockInstantiation(long amsHandle, ClAmsEntityConfigT entity) {
+	  return clAmsMgmtEntityLockInstantiationExtended(amsHandle, entity, (short)1);
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtEntityLockInstantiationExtended(ClAmsMgmtHandleT, const ClAmsEntityT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:347</i>
@@ -1332,7 +1339,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtEntityForceLockInstantiation(ClAmsMgmtHandleT, const ClAmsEntityT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:352</i>
 	 */
-	int clAmsMgmtEntityForceLockInstantiation(long amsHandle, ClAmsEntityConfigT entity);
+  default int clAmsMgmtEntityForceLockInstantiation(long amsHandle, ClAmsEntityConfigT entity) {
+    return clAmsMgmtEntityForceLockInstantiationExtended(amsHandle, entity, (short)1);
+  }
 	/**
 	 * Original signature : <code>int clAmsMgmtEntityForceLockInstantiationExtended(ClAmsMgmtHandleT, const ClAmsEntityT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:356</i>
@@ -1395,7 +1404,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtEntityUnlock(ClAmsMgmtHandleT, const ClAmsEntityT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:432</i>
 	 */
-	int clAmsMgmtEntityUnlock(long amsHandle, ClAmsEntityConfigT entity);
+	default int clAmsMgmtEntityUnlock(long amsHandle, ClAmsEntityConfigT entity) {
+	  return clAmsMgmtEntityUnlockExtended(amsHandle, entity, (short)1);
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtEntityUnlockExtended(ClAmsMgmtHandleT, const ClAmsEntityT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:436</i>
@@ -1468,7 +1479,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtEntityShutdown(ClAmsMgmtHandleT, const ClAmsEntityT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:521</i>
 	 */
-	int clAmsMgmtEntityShutdown(long amsHandle, ClAmsEntityConfigT entity);
+	default int clAmsMgmtEntityShutdown(long amsHandle, ClAmsEntityConfigT entity) {
+	  return clAmsMgmtEntityShutdownExtended(amsHandle, entity, (short) 1);
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtEntityShutdownExtended(ClAmsMgmtHandleT, const ClAmsEntityT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:525</i>
@@ -1564,7 +1577,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtEntityRestart(ClAmsMgmtHandleT, const ClAmsEntityT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:634</i>
 	 */
-	int clAmsMgmtEntityRestart(long amsHandle, ClAmsEntityConfigT entity);
+	default int clAmsMgmtEntityRestart(long amsHandle, ClAmsEntityConfigT entity) {
+	  return clAmsMgmtEntityRestartExtended(amsHandle, entity, (short) 1);
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtEntityRestartExtended(ClAmsMgmtHandleT, const ClAmsEntityT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:638</i>
@@ -1650,7 +1665,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtEntityRepaired(ClAmsMgmtHandleT, const ClAmsEntityT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:830</i>
 	 */
-	int clAmsMgmtEntityRepaired(long amsHandle, ClAmsEntityConfigT entity);
+	default int clAmsMgmtEntityRepaired(long amsHandle, ClAmsEntityConfigT entity) {
+	  return clAmsMgmtEntityRepairedExtended(amsHandle, entity, (short) 1);
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtEntityRepairedExtended(ClAmsMgmtHandleT, const ClAmsEntityT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:834</i>
@@ -1767,7 +1784,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtSISwap(ClAmsMgmtHandleT, const ClCharT*)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:904</i>
 	 */
-	int clAmsMgmtSISwap(long amsHandle, String si);
+	default int clAmsMgmtSISwap(long amsHandle, String si) {
+	  return clAmsMgmtSISwapExtended(amsHandle, si, (short) 1);
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtSISwapExtended(ClAmsMgmtHandleT, const ClCharT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:908</i><br>
@@ -1873,7 +1892,9 @@ public interface ClAmsMgmtLibrary extends Library {
 	 * Original signature : <code>int clAmsMgmtSGAdjust(ClAmsMgmtHandleT, const ClCharT*, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:969</i>
 	 */
-	int clAmsMgmtSGAdjust(long amsHandle, String sg, short enable);
+	default int clAmsMgmtSGAdjust(long amsHandle, String sg, short enable) {
+	  return clAmsMgmtSGAdjustExtended(amsHandle, sg, enable, (short) 1);
+	}
 	/**
 	 * Original signature : <code>int clAmsMgmtSGAdjustExtended(ClAmsMgmtHandleT, const ClCharT*, ClBoolT, ClBoolT)</code><br>
 	 * <i>native declaration : clAmsMgmtClientApi.h:974</i><br>

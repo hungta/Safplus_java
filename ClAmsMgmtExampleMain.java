@@ -423,7 +423,7 @@ public class ClAmsMgmtExampleMain {
     rc = amsMgmtLib.clAmsMgmtCCBInitialize(mgmtHandle, ccbHdl);
     if (rc != 0) {
       clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR, "MGMT CCB initialize returned [%#x]", rc);
-      rc = amsMgmtLib.clAmsMgmtFinalize(mgmtHandle);
+      //rc = amsMgmtLib.clAmsMgmtFinalize(mgmtHandle);
       return rc;
     }
     ccbHandle = ccbHdl.getValue();
@@ -521,6 +521,7 @@ public class ClAmsMgmtExampleMain {
     rc = amsMgmtLib.clAmsMgmtCCBCommit(ccbHandle);
     if (rc != 0) {
       clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"CCB Commit returned [%#x]", rc);      
+      return rc;
     }
     
     
@@ -528,6 +529,7 @@ public class ClAmsMgmtExampleMain {
    rc = clAmsMgmtTestFillConfig(mgmtHandle, ccbHandle, ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SG, pBaseName);
    if (rc != 0) {
       clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"SG config fill returned [%#x]", rc);      
+      return rc;
     }
    
    clprintf(ClLogSeverityT.CL_LOG_SEV_INFO,"Fill SI config");
@@ -539,25 +541,29 @@ public class ClAmsMgmtExampleMain {
    clprintf(ClLogSeverityT.CL_LOG_SEV_INFO,"Fill CSI config");
    rc = clAmsMgmtTestFillConfig(mgmtHandle, ccbHandle, ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_CSI, pBaseName);
    if (rc != 0) {
-     clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"CSI config fill returned [%#x]", rc);      
+     clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"CSI config fill returned [%#x]", rc);    
+     return rc;
    }
    
    clprintf(ClLogSeverityT.CL_LOG_SEV_INFO,"Fill SU config");
    rc = clAmsMgmtTestFillConfig(mgmtHandle, ccbHandle, ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SU, pBaseName);
    if (rc != 0) {
      clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"SU config fill returned [%#x]", rc);      
+     return rc;
    }
    
    clprintf(ClLogSeverityT.CL_LOG_SEV_INFO,"Fill NODE config");
    rc = clAmsMgmtTestFillConfig(mgmtHandle, ccbHandle, ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_NODE, pBaseName);
    if (rc != 0) {
      clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"NODE config fill returned [%#x]", rc);      
+     return rc;
    }
    
    clprintf(ClLogSeverityT.CL_LOG_SEV_INFO,"Fill COMP config");
    rc = clAmsMgmtTestFillConfig(mgmtHandle, ccbHandle, ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_COMP, pBaseName);
    if (rc != 0) {
-     clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"COMP config fill returned [%#x]", rc);      
+     clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"COMP config fill returned [%#x]", rc);
+     return rc;
    }
    
    /*rc = clDhaExmpExec(
@@ -572,6 +578,7 @@ public class ClAmsMgmtExampleMain {
                   err -> String.format("Unlock AMS entities returned [%#x]", err)); 
     }
     finally {
+      final long CCB_HANDLE = ccbHandle;
       if (ccbHandle != 0) {
          clprintf(ClLogSeverityT.CL_LOG_SEV_INFO,"Running CCB finalize");
          retCode = amsMgmtLib.clAmsMgmtCCBFinalize(ccbHandle);
@@ -635,7 +642,7 @@ public class ClAmsMgmtExampleMain {
      /* 
       * Delete the entities only if they exist
       */
-      String temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SG, pBaseName, "%sSG", entity);
+      String temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SG, "%sSG", pBaseName,entity);
       rc = amsMgmtLib.clAmsMgmtEntityGetConfig(mgmtHandle,
                                   entity,
                                   pEntityConfig);
@@ -662,7 +669,7 @@ public class ClAmsMgmtExampleMain {
       }
 
       /*Delete 2 COMPs*/
-      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_COMP,NEW_COMP_PREFIX, "%s0", entity);
+      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_COMP,"%s0", NEW_COMP_PREFIX,entity);
       rc = clDhaExmpExec("Deleting COMP " + temp,
                   () -> amsMgmtLib.clAmsMgmtCCBEntityDelete(CCB_HANDLE, entity),
                   err -> String.format("COMP delete returned [%#x]", err));
@@ -678,7 +685,7 @@ public class ClAmsMgmtExampleMain {
       }      
 
       /*Delete 2 SUs*/
-      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SU, pBaseName, "%sSU0", entity);
+      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SU, "%sSU0", NEW_COMP_PREFIX,entity);
       rc = clDhaExmpExec("Deleting SU " + temp,
                   () -> amsMgmtLib.clAmsMgmtCCBEntityDelete(CCB_HANDLE, entity),
                   err -> String.format("SU delete returned [%#x]", err));
@@ -694,7 +701,7 @@ public class ClAmsMgmtExampleMain {
       }     
 
       /* Delete CSI*/
-      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_CSI, pBaseName, "%sCSI", entity);
+      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_CSI, "%sCSI", pBaseName,entity);
       rc = clDhaExmpExec("Deleting CSI " + temp,
                   () -> amsMgmtLib.clAmsMgmtCCBEntityDelete(CCB_HANDLE, entity),
                   err -> String.format("CSI delete returned [%#x]", err));
@@ -703,7 +710,7 @@ public class ClAmsMgmtExampleMain {
       }   
 
       /* Delete SI*/
-      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SI, pBaseName, "%sSI", entity);
+      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SI, "%sSI", pBaseName,entity);
       rc = clDhaExmpExec("Delete SI " + temp,
                   () -> amsMgmtLib.clAmsMgmtCCBEntityDelete(CCB_HANDLE, entity),
                   err -> String.format("SI delete returned [%#x]", err));
@@ -712,7 +719,7 @@ public class ClAmsMgmtExampleMain {
       }      
 
       /* Delete SG*/
-      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SG, pBaseName, "%sSG", entity);
+      temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SG, "%sSG", pBaseName,entity);
       rc = clDhaExmpExec("Deleting SG " + temp,
                   () -> amsMgmtLib.clAmsMgmtCCBEntityDelete(CCB_HANDLE, entity),
                   err -> String.format("SG delete returned [%#x]", err));
@@ -738,7 +745,7 @@ public class ClAmsMgmtExampleMain {
          clprintf(ClLogSeverityT.CL_LOG_SEV_INFO,"Running MGMT finalize");
          retCode = amsMgmtLib.clAmsMgmtFinalize(mgmtHandle);
          if (retCode != 0) {
-           clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"MGMT finalize returned [%#x]", retCode);
+          clprintf(ClLogSeverityT.CL_LOG_SEV_ERROR,"MGMT finalize returned [%#x]", retCode);
          }
       }
       if (rc == 0) {
@@ -881,7 +888,7 @@ public class ClAmsMgmtExampleMain {
     /*
      * Step 1 - Lock, Lock_I SUs
      */
-    String temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SU, pBaseName, "%sSU0", entity);
+    String temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SU, "%sSU0", pBaseName,entity);
     rc = clDhaExmpExec("LockA " + temp,
                   () -> amsMgmtLib.clAmsMgmtEntityLockAssignment(ccbHandle, entity),
                   err -> String.format("LockA returned [%#x]", err));
@@ -911,7 +918,7 @@ public class ClAmsMgmtExampleMain {
     /*
      * Step 2 - Lock SI
      */
-   temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SI, pBaseName, "%sSI", entity);
+   temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SI, "%sSI", pBaseName,entity);
    rc = clDhaExmpExec("LockA SI " + temp,
                   () -> amsMgmtLib.clAmsMgmtEntityLockAssignment(ccbHandle, entity),
                   err -> String.format("LockA returned [%#x]", err));
@@ -923,7 +930,7 @@ public class ClAmsMgmtExampleMain {
      * Step 3 - Lock, Lock_I SG
      */
 
-   temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SG, pBaseName, "%sSG", entity);
+   temp = fillEntity(ClAmsEntityTypeT.CL_AMS_ENTITY_TYPE_SG, "%sSG", pBaseName,entity);
     rc = clDhaExmpExec("LockA SG " + temp,
                   () -> amsMgmtLib.clAmsMgmtEntityLockAssignment(ccbHandle, entity),
                   err -> String.format("LockA returned [%#x]", err));
@@ -931,7 +938,7 @@ public class ClAmsMgmtExampleMain {
       return rc;
     }
     rc = clDhaExmpExec("LockI SG " + temp,
-                  () -> amsMgmtLib.clAmsMgmtEntityLockInstantiation(ccbHandle, entity),
+                  () -> amsMgmtLib.clAmsMgmtEntityLockInstantiation(ccbHandle,entity),
                   err -> String.format("LockI returned [%#x]", err));    
 
     return rc;

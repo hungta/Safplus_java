@@ -334,6 +334,19 @@ public interface ClUtilsLibrary extends Library {
 		}
 	};*/
 	
+	public static class ClVersionT extends Structure {
+        public byte releaseCode;
+        public byte majorVersion;
+        public byte minorVersion;
+
+        @Override
+        protected List<String> getFieldOrder() {
+            return List.of("releaseCode", "majorVersion", "minorVersion");
+        }
+        public static class ByReference extends ClVersionT implements Structure.ByReference {
+		
+	      };
+  };
 	public static class ClNameT extends Structure {
 	  /** C type : SaUint16T */
 	  public short length;
